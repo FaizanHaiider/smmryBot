@@ -1,15 +1,13 @@
 #!/usr/bin/python
 
-import praw # reddit API
-import re # regex  
-import subprocess # to run php script
-import os # open, read, and close reference file
+import praw, re, subprocess, os
+from langdetect import detect
 
-
-# get newest post submission.ID
+# get reference ID from reference.txt  
 if os.path.isfile("reference.txt"):
 	with open("reference.txt", "r") as f:
-		refer_id = f.read()
+		temp_id = f.read().split("\n")
+		reference_id = temp_id[0]
 
 # create instance of Reddit and login
 user_agent = ("")
@@ -20,40 +18,34 @@ r = praw.Reddit(client_id='',
 				user_agent=user_agent)
 
 # open subreddit
-subr = r.subreddit("swissnews")
+subr = r.subreddit("pythonforengineers")
 
-# newest post
-temp_list = subr.new(limit=1)
-newest_post = temp_list.next()
+# filter self posts out from all new posts
+all_new = subr.new(limit=50)
+url_posts = []
+for submission in all_new:
+	if reference_id == submission.id:
+		break
+	elif not submission.is_self:
+		url_posts.append(submission)
 
-# check if new content
-if newest_post.id == refer_id:
-	exit(1) # no new content
-else:
-	id_for_file = newest_post.id # new content
-	with open("reference.txt", "w") as f:
-		f.write(id_for_file)
+# create summary for each url post and reply to submission
+for url in url_posts:
+	cmd = "php curlSmmry.php " + url.url
+	php_script = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE)
+	smmry_response = php_script.stdout.read()
 
+	# parse response
+	smmry_array = re.split("\+", smmry_response)
+	title = smmry_array[0].decode("utf8")
+	summary = smmry_array[1].decode("utf8")
 
-# find URL post(s)
-submissions = subr.new()
-for submission in submissions:
-	if not submission.is_self:
-		if submission.id == refer_id:
-			exit(1)
-		else:
-			# run php script and read response
-			cmd = "php curlSmmry.php " + submission.url
-			php_script = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE)
-			smmry_response = php_script.stdout.read()
+	# check language. if not english, exit
+	if detect(summary) != "en":
+		exit(1)
 
-			# # parse response
-			smmry_array = re.split("\+", smmry_response)
-			title = smmry_array[0].decode("utf8")
-			summary = smmry_array[1].decode("utf8")
+	# create final comment
+	comment = "[" + title + "](" + url.url + ") summarized in 5 lines using [smmry.com](http://www.smmry.com).\n\n \"" + summary + "\"\n\n **I am a bot**"
 
-			# # create final comment
-			comment = "[" + title + "](" + submission.url + ") summarized in 5 lines using [smmry.com](http://www.smmry.com).\n\n \"" + summary + "\"\n\n **I am a bot**"
-
-			# # reply to post with summart
-			submission.reply(comment)
+	# reply to post with summart
+	url.reply(comment)
