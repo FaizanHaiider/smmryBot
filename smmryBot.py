@@ -18,7 +18,7 @@ r = praw.Reddit(client_id='',
 				user_agent=user_agent)
 
 # open subreddit
-subr = r.subreddit("pythonforengineers")
+subr = r.subreddit("swissnews")
 
 # filter self posts out from all new posts
 all_new = subr.new(limit=50)
