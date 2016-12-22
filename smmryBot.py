@@ -21,13 +21,19 @@ r = praw.Reddit(client_id='',
 subr = r.subreddit("swissnews")
 
 # filter self posts out from all new posts
-all_new = subr.new(limit=50)
+all_new = subr.new(limit=5)
 url_posts = []
 for submission in all_new:
 	if reference_id == submission.id:
 		break
 	elif not submission.is_self:
 		url_posts.append(submission)
+
+# update reference.txt file
+updated_id = url_posts[0].id
+with open("reference.txt", "w") as f:
+	f.write(updated_id)
+
 
 # create summary for each url post and reply to submission
 for url in url_posts:
@@ -40,9 +46,9 @@ for url in url_posts:
 	title = smmry_array[0].decode("utf8")
 	summary = smmry_array[1].decode("utf8")
 
-	# check language. if not english, exit
+	# check language. if not english, move on to next iteration
 	if detect(summary) != "en":
-		exit(1)
+		continue
 
 	# create final comment
 	comment = "[" + title + "](" + url.url + ") summarized in 5 lines using [smmry.com](http://www.smmry.com).\n\n \"" + summary + "\"\n\n **I am a bot**"
