@@ -3,12 +3,6 @@
 import praw, re, subprocess, os
 from langdetect import detect
 
-# get reference ID from reference.txt  
-if os.path.isfile("reference.txt"):
-	with open("reference.txt", "r") as f:
-		temp_id = f.read().split("\n")
-		reference_id = temp_id[0]
-
 # create instance of Reddit and login
 user_agent = ("")
 r = praw.Reddit(client_id='',
@@ -18,40 +12,37 @@ r = praw.Reddit(client_id='',
 				user_agent=user_agent)
 
 # open subreddit
-subr = r.subreddit("swissnews")
+subr = r.subreddit("")
 
-# filter self posts out from all new posts
-all_new = subr.new(limit=5)
-url_posts = []
-for submission in all_new:
-	if reference_id == submission.id:
-		break
-	elif not submission.is_self:
-		url_posts.append(submission)
+for comment in subr.stream.comments():
+	if re.search("smmry_bot!", comment.body):
+		
+		# get reddit Submission object
+		submission = comment.submission
 
-# update reference.txt file
-updated_id = url_posts[0].id
-with open("reference.txt", "w") as f:
-	f.write(updated_id)
+		# call php script
+		cmd = "php curlSmmry.php " + submission.url
+		php_script = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE)
+		smmry_response = php_script.stdout.read()
 
+		# parse php response
+		smmry_array = re.split("\+", smmry_response)
+		title = smmry_array[0].decode("utf-8")
+		title = title[1:]
+		summary = smmry_array[1].decode("utf-8")
 
-# create summary for each url post and reply to submission
-for url in url_posts:
-	cmd = "php curlSmmry.php " + url.url
-	php_script = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE)
-	smmry_response = php_script.stdout.read()
+		# check if smmry returned an error
+		# if error in (0,1,2,3):
+		# 	comment.reply("An error occured. Sorry about that.\n\n I am a **bot** [PM](https://www.reddit.com/message/compose/?to=danktofen) my creator for questions/concerns")
+		# 	continue
 
-	# parse response
-	smmry_array = re.split("\+", smmry_response)
-	title = smmry_array[0].decode("utf8")
-	summary = smmry_array[1].decode("utf8")
+		# check language. if not english, move on to next iteration
+		if detect(summary) != "en":
+			comment.reply("smmry.com works best with English articles. Articles in other languages result in summaries that don't make sense.\n\n I am a **bot**. [PM](https://www.reddit.com/message/compose/?to=danktofen) my creator for questions/concerns")
+			continue
+		
+		# create final comment
+		final_msg = "[" + title + "](" + submission.url + ") summarized in 7 lines using [smmry.com](http://www.smmry.com).\n\n \"" + summary + "\"\n\n I am a **bot**. [PM](https://www.reddit.com/message/compose/?to=danktofen) my creator for questions/concerns"
 
-	# check language. if not english, move on to next iteration
-	if detect(summary) != "en":
-		continue
-
-	# create final comment
-	comment = "[" + title + "](" + url.url + ") summarized in 5 lines using [smmry.com](http://www.smmry.com).\n\n \"" + summary + "\"\n\n **I am a bot**"
-
-	# reply to post with summart
-	url.reply(comment)
+		# reply to post with summart
+		comment.reply(final_msg)
