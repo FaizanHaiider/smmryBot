@@ -6,10 +6,15 @@ This project uses programming laguages Python and PHP.
 In order to run the program, use command "python smmryBot.py".  
 
 Python Dependencies (Linux terminal):
+
   To Install Python     -> sudo apt-get python 
+
   To Install Praw       -> pip install praw
+  
   To Install langdetec  -> pip install langdetect
 
 PHP Dependencies (Linux terminal):
+  
   To Install PHP        -> sudo apt-get install php5-cli
+  
   To Install cURL       -> sudo apt-get install php5-curl
