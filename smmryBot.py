@@ -13,12 +13,18 @@ r = praw.Reddit(client_id='',
 
 # open subreddit
 subr = r.subreddit("")
+post_id_list = []
 
 for comment in subr.stream.comments():
 	if re.search("smmry_bot!", comment.body):
 		
 		# get reddit Submission object
 		submission = comment.submission
+
+		if submission.id in post_id_list:
+			summary_exists = "A summary has already been created for this submission. Summary under parent comment = smmry_bot!. \n\n I am a **bot**. [PM](https://www.reddit.com/message/compose/?to=danktofen) my creator for questions/concerns"
+			comment.rely(summary_exists)
+			continue
 
 		# call php script
 		cmd = "php curlSmmry.php " + submission.url
@@ -46,3 +52,6 @@ for comment in subr.stream.comments():
 
 		# reply to post with summart
 		comment.reply(final_msg)
+
+		# record submission id so script doesn't summarize the same article twice
+		post_id_list.append(submission.id) 
