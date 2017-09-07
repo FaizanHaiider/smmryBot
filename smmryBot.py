@@ -9,7 +9,7 @@ from langdetect import detect
 def format_smmry(smmry_response):
 	smmry_array = re.split("\+", smmry_response)
 	title = smmry_array[0].decode("utf-8")
-	title = title[1:]
+	#title = title[1:]
 	title = title.replace("\\'", "\'")
 
 	smmry = smmry_array[1].decode("utf-8")
@@ -35,7 +35,7 @@ post_id_list = []
 
 for comment in subr.stream.comments():
 	if re.search("^(smmry_bot!)$", comment.body, re.IGNORECASE):
-		
+
 		# get reddit Submission object
 		submission = comment.submission
 
@@ -62,7 +62,7 @@ for comment in subr.stream.comments():
 		if detect(summary) != "en":
 			comment.reply("smmry.com works best with English articles. Articles in other languages result in summaries that don't make sense.\n\n I am a **bot**. [PM](https://www.reddit.com/message/compose/?to=danktofen) my creator for questions/concerns")
 			continue
-		
+
 		# create final comment
 		final_msg = "[" + title + "](" + submission.url + ") summarized in 5 lines using [smmry.com](http://www.smmry.com).\n\n>" + summary + "\n\n I am a **bot**. [PM](https://www.reddit.com/message/compose/?to=danktofen) my creator for questions/concerns"
 
@@ -72,4 +72,4 @@ for comment in subr.stream.comments():
 		comment.reply(final_msg)
 
 		# record submission id so script doesn't summarize the same article twice
-		post_id_list.append(submission.id) 
+		post_id_list.append(submission.id)

@@ -47,7 +47,7 @@ def write_to_file(arr):
 def format_smmry(smmry_response):
     smmry_array = re.split("\+", smmry_response)
     title = smmry_array[0].decode("utf-8")
-    title = title[1:]
+    #title = title[1:]
     title = title.replace("\\'", "\'")
 
     smmry = smmry_array[1].decode("utf-8")
@@ -67,8 +67,8 @@ def create_smmry(subm):
     try:
         title, summary = format_smmry(smmry_response)
     except:
-        comment.reply("An error occured. Sorry about that.\n\n I am a **bot** [PM](https://www.reddit.com/message/compose/?to=danktofen) my creator for questions/concerns")
-    return summary
+        comment.reply("An error occured. Sorry about that.\n\n I am a **bot** [PM]() my creator for questions/concerns")
+    return title, summary
 
 def create_smmrys(r):
     subr = r.subreddit("testbotsdankt")
@@ -79,9 +79,10 @@ def create_smmrys(r):
         print subm.url
         for top_level_comment in subm.comments:
             if re.search("^(!smmry_bot)$", top_level_comment.body, re.IGNORECASE):
-                print top_level_comment.body
-                smmry = create_smmry(subm)
-                top_level_comment.reply(smmry)
+                title, smmry = create_smmry(subm)
+            	# create final comment
+            	final_msg = "**Title**: [" + title + "](" + subm.url + ") \n\n>" + smmry
+                top_level_comment.reply(final_msg)
 
 
 def main():
