@@ -38,11 +38,11 @@ def write_to_file(arr):
 # None == remove timestamp
 # 1 == add timestamp
 # 2 == return most recent timestamp
-# def time_stamp(value=None):
-#     if value == None:
-#         # todo
-#     elif value == 1:
-#         # todo
+def time_stamp(value=None):
+    if value == None:
+        # todo
+    elif value == 1:
+        # todo
 
 def format_smmry(smmry_response):
     smmry_array = re.split("\+", smmry_response)
@@ -81,7 +81,9 @@ def create_smmrys(r):
             if re.search("^(!smmry_bot)$", top_level_comment.body, re.IGNORECASE):
                 title, smmry = create_smmry(subm)
             	# create final comment
-            	final_msg = "**Title**: [" + title + "](" + subm.url + ") \n\n>" + smmry
+                title = "**Title**: [" + title + "](" + subm.url + ") \n\n>"
+            	ending_msg = "\n\n Notice something wrong? Send me a msg. \n\n*I am a bot*"
+                final_msg = title + smmry + ending_msg
                 top_level_comment.reply(final_msg)
 
 
